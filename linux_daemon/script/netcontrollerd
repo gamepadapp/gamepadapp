@@ -1,0 +1,45 @@
+#!/bin/sh
+# chkconfig: 345 35 65
+# description: Game Controller Daemon
+# processname: netcontrollerd
+
+PROC="netcontrollerd"
+EXEC=/usr/local/bin/${PROC}
+
+ACCEPTPORT="xxxx"
+
+PIDFILE=/var/run/${PROC}.pid
+LOCKFILE=/var/lock/subsys/${PROC}
+
+case "$1" in
+	start)
+		if [ -f $PIDFILE ]
+		then
+			echo "$PIDFILE exists, process is already running or crashed"
+		else
+			echo "Starting ${PROC}..."
+			touch $LOCKFILE
+			$EXEC $ACCEPTPORT
+		fi
+		;;
+	stop)
+		if [ ! -f $PIDFILE ]
+		then
+			echo "$PIDFILE does not exist, process is not running"
+		else
+			PID=$(cat $PIDFILE)
+			echo "Stopping ..."
+			kill $PID
+			while [ -x /proc/${PID} ]
+			do
+				echo "Waiting for ${PROC} to shutdown ..."
+				sleep 1
+			done
+			rm -f $LOCKFILE
+			echo "${PROC} stopped"
+		fi
+		;;
+	*)
+		echo "Please use start or stop as first argument"
+		;;
+esac
